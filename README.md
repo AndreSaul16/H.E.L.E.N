@@ -61,10 +61,8 @@ El sistema opera mediante la interacción de varios componentes clave:
 
 * *Configuración inicial del webhook entre Retell AI y n8n.*
 * *Manejo de formatos de fecha y hora entre sistemas.*
-* *Autenticación con la API de Google Calendar.*
 * *Comprensión de cómo la IA interpreta las intenciones del usuario.*
 * *La importancia de probar cada paso del flujo de manera aislada y luego en conjunto.*
-* *Lo gratificante que es ver cómo diferentes herramientas se unen para crear una solución funcional, incluso siendo mi primera vez con ellas.)*
 
 ## Mejoras Futuras
 
