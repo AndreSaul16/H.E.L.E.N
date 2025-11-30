@@ -1,0 +1,293 @@
+/* ============================================
+   Variables CSS y Reset
+   ============================================ */
+:root {
+  --primary-purple: #a855f7;
+  --primary-cyan: #06b6d4;
+  --primary-pink: #ec4899;
+  --glow-color: rgba(168, 85, 247, 0.6);
+  --sphere-size: 200px;
+  --sphere-size-expanded: 280px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+  position: relative;
+  background: #000000;
+  /* Fondo negro puro */
+}
+
+/* ============================================
+   Esfera 3D
+   ============================================ */
+#sphereContainer {
+  position: relative;
+  width: var(--sphere-size);
+  height: var(--sphere-size);
+  transition: transform 0.3s ease;
+  perspective: 1000px;
+  perspective-origin: center center;
+  animation: status-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   Efectos de typing
+   ============================================ */
+.typing::after {
+  content: '|';
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+@media (max-width: 768px) {
+  :root {
+    --sphere-size: 150px;
+    --sphere-size-expanded: 200px;
+  }
+
+  #transcriptArea,
+  #responseArea {
+    bottom: auto;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 90%;
+  }
+
+  #statusIndicator {
+    top: 20px;
+  }
+}
+
+/* ============================================
+   Utilidades
+   ============================================ */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out forwards;
+}
+
+.fade-out {
+  animation: fadeOut 0.5s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   Scrollbar personalizada
+   ============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+}
+
+/* ============================================
+   Variables CSS y Reset
+   ============================================ */
+:root {
+  --primary-purple: #a855f7;
+  --primary-cyan: #06b6d4;
+  --primary-pink: #ec4899;
+  --glow-color: rgba(168, 85, 247, 0.6);
+  --sphere-size: 200px;
+  --sphere-size-expanded: 280px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow: hidden;
+  position: relative;
+  background: #000000;
+  /* Fondo negro puro */
+}
+
+/* ============================================
+   Esfera 3D
+   ============================================ */
+#sphereContainer {
+  position: relative;
+  width: var(--sphere-size);
+  height: var(--sphere-size);
+  transition: transform 0.3s ease;
+  perspective: 1000px;
+  perspective-origin: center center;
+  animation: status-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes status-pulse {
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ============================================
+   Efectos de typing
+   ============================================ */
+.typing::after {
+  content: '|';
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+@media (max-width: 768px) {
+  :root {
+    --sphere-size: 150px;
+    --sphere-size-expanded: 200px;
+  }
+
+  #transcriptArea,
+  #responseArea {
+    bottom: auto;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 90%;
+  }
+
+  #statusIndicator {
+    top: 20px;
+  }
+}
+
+/* ============================================
+   Utilidades
+   ============================================ */
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out forwards;
+}
+
+.fade-out {
+  animation: fadeOut 0.5s ease-in-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   Scrollbar personalizada
+   ============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.7);
+}
+
+/* ============================================
+   Panel de vidrio
+   ============================================ */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+}
