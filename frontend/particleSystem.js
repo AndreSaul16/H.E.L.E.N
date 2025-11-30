@@ -78,9 +78,15 @@ export class ParticleSystem {
 
         const sizeBase = type === 'bass' ? 3 : (type === 'mid' ? 2 : 1.5);
 
+        // Posición inicial (home position)
+        const homeX = Math.random() * this.canvas.width;
+        const homeY = Math.random() * this.canvas.height;
+
         return {
-            x: Math.random() * this.canvas.width,
-            y: Math.random() * this.canvas.height,
+            x: homeX,
+            y: homeY,
+            homeX: homeX, // Posición "home" a la que volver
+            homeY: homeY,
             vx: (Math.random() - 0.5) * 0.5,
             vy: (Math.random() - 0.5) * 0.5,
             sizeBase: sizeBase,
@@ -162,9 +168,25 @@ export class ParticleSystem {
                 }
             }
 
+            // 4. Sistema de Retorno a Posición Home (CONSTANTE)
+            // Siempre aplicar fuerza de atracción hacia la posición home
+            const dx = p.homeX - p.x;
+            const dy = p.homeY - p.y;
+            const distToHome = Math.sqrt(dx * dx + dy * dy);
+
+            let homeForceX = 0;
+            let homeForceY = 0;
+
+            if (distToHome > 2) { // Solo aplicar si está lejos de home
+                // Fuerza tipo "spring" (resorte) constante para retorno suave
+                const springStrength = 0.015; // Fuerza constante pero suave
+                homeForceX = dx * springStrength;
+                homeForceY = dy * springStrength;
+            }
+
             // Aplicar fuerzas
-            p.vx += noiseX * 0.05 + audioForceX * 0.05 + mouseForceX * 0.1;
-            p.vy += noiseY * 0.05 + audioForceY * 0.05 + mouseForceY * 0.1;
+            p.vx += noiseX * 0.05 + audioForceX * 0.05 + mouseForceX * 0.1 + homeForceX;
+            p.vy += noiseY * 0.05 + audioForceY * 0.05 + mouseForceY * 0.1 + homeForceY;
 
             // Fricción para que no se aceleren infinitamente
             p.vx *= 0.95;

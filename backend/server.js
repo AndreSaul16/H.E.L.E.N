@@ -4,7 +4,9 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
-import conversationRoutes, { initializeServices } from './routes/conversationRoutes.js';
+import { createServer } from 'http';
+import conversationRoutes, { initializeServices, getServices } from './routes/conversationRoutes.js';
+import setupWebSocket from './routes/socketHandler.js';
 
 // Configurar __dirname para ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -16,6 +18,26 @@ dotenv.config({ path: path.join(__dirname, '..', '.env') });
 // Crear aplicación Express
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// ============================================================
+// CONCEPTO PEDAGÓGICO: HTTP Server + WebSockets
+// ============================================================
+/**
+ * ANTES (solo HTTP):
+ * const app = express();
+ * app.listen(PORT);
+ * 
+ * AHORA (HTTP + WebSockets):
+ * const app = express();
+ * const httpServer = createServer(app);  ← Servidor HTTP explícito
+ * const io = setupWebSocket(httpServer); ← WebSocket sobre HTTP
+ * httpServer.listen(PORT);
+ * 
+ * ANALOGÍA: Casa con dos puertas
+ * - Puerta principal (HTTP): Para visitas normales (requests)
+ * - Puerta trasera (WebSocket): Para amigos que vienen a quedarse (conexión persistente)
+ */
+const httpServer = createServer(app);
 
 // Middlewares
 app.use(cors({
@@ -37,14 +59,25 @@ app.use((req, res, next) => {
 });
 
 // Inicializar servicios
+let services;
 try {
     initializeServices();
+    services = getServices(); // Obtener servicios para WebSocket
 } catch (error) {
     console.error('❌ Error al inicializar servicios:', error.message);
     process.exit(1);
 }
 
-// Rutas de API
+// ============================================================
+// SETUP DE WEBSOCKET
+// ============================================================
+/**
+ * Configurar Socket.IO con los servicios (Whisper, ChatGPT, ElevenLabs)
+ * Esto permite comunicación bidireccional en tiempo real
+ */
+const io = setupWebSocket(httpServer, services);
+
+// Rutas de API (mantener compatibilidad con HTTP)
 app.use('/api', conversationRoutes);
 
 // Ruta principal
@@ -66,24 +99,30 @@ app.use((err, req, res, next) => {
     });
 });
 
-// Iniciar servidor
-app.listen(PORT, () => {
+// Iniciar servidor (ahora con HTTP + WebSocket)
+httpServer.listen(PORT, () => {
     console.log('\n🚀 ============================================');
-    console.log(`🎙️  VoiceAI Game Server`);
-    console.log(`📡 Servidor corriendo en http://localhost:${PORT}`);
+    console.log(`🎙️  VoiceAI Game Server - Full-Duplex Edition`);
+    console.log(`📡 Servidor HTTP en http://localhost:${PORT}`);
+    console.log(`🔌 WebSocket Server activo`);
     console.log(`🌍 CORS habilitado`);
     console.log(`🤖 Usando OpenAI Assistants API`);
     console.log(`🎤 Whisper STT en español`);
-    console.log(`🔊 ElevenLabs TTS`);
+    console.log(`🔊 ElevenLabs TTS con streaming`);
+    console.log(`🎯 VAD (Voice Activity Detection) disponible`);
     console.log('🚀 ============================================\n');
 });
 
 // Manejo de cierre graceful
 process.on('SIGINT', () => {
     console.log('\n👋 Cerrando servidor...');
-    process.exit(0);
+    io.close(() => {
+        console.log('✅ WebSocket cerrado');
+        process.exit(0);
+    });
 });
 
 process.on('unhandledRejection', (reason, promise) => {
     console.error('❌ Promesa rechazada no manejada:', reason);
 });
+

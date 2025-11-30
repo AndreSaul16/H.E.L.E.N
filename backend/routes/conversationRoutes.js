@@ -40,6 +40,18 @@ export function initializeServices() {
 }
 
 /**
+ * Obtener instancias de servicios para WebSocket
+ */
+export function getServices() {
+    return {
+        whisper: whisperService,
+        chatgpt: chatGPTService,
+        elevenlabs: elevenLabsService
+    };
+}
+
+
+/**
  * POST /api/conversar
  * Endpoint principal para el flujo completo de conversación
  * Recibe: audio
