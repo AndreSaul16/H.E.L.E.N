@@ -1,256 +1,241 @@
-# 🎙️ VoiceAI Game - Singularidad Conversacional
+# 🎙️ H.E.L.E.N 2.0 - Voice AI Assistant
 
-Aplicación web de conversación por voz en tiempo real que integra **Whisper** (Speech-to-Text), **ChatGPT** (IA conversacional) y **ElevenLabs/CoquiTTS** (Text-to-Speech) con una interfaz visual impresionante.
+**H**uman **E**nhanced **L**istening & **E**ngagement **N**etwork
+
+Una asistente de voz impulsada por IA con detección automática de voz (VAD), streaming en tiempo real y visualización interactiva de audio.
+
+![Version](https://img.shields.io/badge/version-2.0-blue.svg)
+![Node](https://img.shields.io/badge/node-v20+-green.svg)
+![License](https://img.shields.io/badge/license-MIT-orange.svg)
 
 ## ✨ Características
 
-- 🌐 **Interfaz Minimalista**: Esfera 3D interactiva como elemento central único
-- 🎵 **Visualización de Audio en Tiempo Real**: La esfera reacciona al ritmo de las voces
-- 🎨 **Animaciones Premium**: GSAP con efectos de expansión, distorsión y pulsación
-- 🎤 **STT con Whisper**: Transcripción precisa de voz a texto en español
-- 🤖 **ChatGPT**: Respuestas conversacionales inteligentes
-- 🔊 **TTS Dual**: ElevenLabs como primario y CoquiTTS local como respaldo
-- 🌌 **Partículas Flotantes**: Fondo animado con efecto de singularidad
-- 📱 **Diseño Responsivo**: Funciona en desktop y móvil
-- 🛡️ **Arquitectura Modular**: Código limpio siguiendo principios SOLID
+### 🎯 Core Features
+- **🎤 VAD (Voice Activity Detection)**: Detección automática de voz sin necesidad de mantener botones presionados
+- **🔄 Streaming Bidireccional**: WebSocket con Socket.IO para comunicación en tiempo real
+- **🗣️ Conversación Continua**: Flujo automático sin interrupciones manuales
+- **🎵 Audio Fluido**: Sistema de buffering para reproducción sin cortes
 
-## 🎯 Flujo de Conversación
+### 🤖 Integración de IA
+- **Whisper (OpenAI)**: Transcripción de voz a texto en español
+- **ChatGPT Assistants API**: Conversación inteligente con contexto
+- **ElevenLabs**: Text-to-Speech con voz multilingüe de alta calidad
 
-1. **Click en la esfera** → Se expande e inicia la grabación
-2. **Habla** → La esfera reacciona a tu voz en tiempo real
-3. **Click nuevamente** → Detiene grabación y procesa
-4. **Whisper** → Transcribe tu audio a texto
-5. **ChatGPT** → Genera una respuesta inteligente
-6. **ElevenLabs** → Convierte la respuesta a voz (con fallback a CoquiTTS)
-7. **Reproducción** → La esfera se mueve al ritmo de la respuesta
+### 🎨 Interfaz Visual
+- **Esfera 3D Interactiva**: Animada con GSAP
+- **Sistema de Partículas**: Reacciona al audio en tiempo real
+- **AudioVisualizer**: Visualización espectral del audio
+- **Animaciones Fluidas**: transiciones suaves con GSAP
 
-## 📋 Requisitos Previos
+## 🚀 Inicio Rápido
 
-- **Node.js** 16 o superior
-- **npm** o **yarn**
-- **API Keys**:
-  - OpenAI API Key (para Whisper + ChatGPT)
-  - ElevenLabs API Key (para TTS premium)
-
-## 🚀 Instalación
-
-### 1. Clonar o descargar el proyecto
+### Prerequisitos
 
 ```bash
-cd VoiceAIGame
+node >= 20.0.0
+npm >= 9.0.0
 ```
 
+### Instalación
 
-### 4. Configurar modelos (opcional)
-
-Puedes personalizar los modelos en `backend/config/appsettings.json`:
-
-```json
-{
-  "openai": {
-    "model": "gpt-4-turbo-preview",
-    "whisperModel": "whisper-1",
-    "maxTokens": 500,
-    "temperature": 0.7
-  },
-  "elevenlabs": {
-    "model": "eleven_turbo_v2",
-    "voiceSettings": {
-      "stability": 0.5,
-      "similarity_boost": 0.75
-    }
-  }
-}
+1. **Clonar el repositorio:**
+```bash
+git clone https://github.com/AndreSaul16/H.E.L.E.N.git
+cd H.E.L.E.N
 ```
 
-## 🎮 Uso
+2. **Instalar dependencias:**
+```bash
+npm install
+```
 
-### Iniciar el servidor
+3. **Configurar variables de entorno:**
+
+Crea un archivo `.env` en la raíz del proyecto:
+
+```env
+# OpenAI (Whisper + ChatGPT)
+OPENAI_API_KEY=sk-...
+OPENAI_ASSISTANT_ID=asst_...
+
+# ElevenLabs (TTS)
+ELEVENLABS_API_KEY=...
+ELEVENLABS_VOICE_ID=qHkrJuifPpn95wK3rm2A
+
+# Server Config
+PORT=4000
+```
+
+### Ejecutar
+
+**Modo desarrollo (backend + frontend):**
+```bash
+npm run dev:full
+```
+
+O ejecutar por separado:
 
 ```bash
+# Terminal 1 - Backend
 npm run dev
+
+# Terminal 2 - Frontend
+npm run dev:vite
 ```
 
-El servidor se iniciará en `http://localhost:3000`
+Abrir en el navegador: `http://localhost:5173`
 
-### Usar la aplicación
-
-1. Abre tu navegador en `http://localhost:3000`
-2. Permite el acceso al micrófono
-3. **Click en la esfera central** para iniciar
-4. **Habla** y observa cómo la esfera reacciona
-5. **Click nuevamente** para detener y procesar
-6. Escucha la respuesta mientras la esfera se mueve al ritmo
-
-### Verificar estado de servicios
-
-```bash
-curl http://localhost:3000/api/status
-```
-
-## 🏗️ Arquitectura del Proyecto
+## 📁 Estructura del Proyecto
 
 ```
-VoiceAIGame/
+H.E.L.E.N-version-2.0-preview/
 ├── backend/
-│   ├── server.js                 # Servidor Express principal
-│   ├── config/
-│   │   └── appsettings.json      # Configuración de modelos
+│   ├── server.js                 # Servidor principal
 │   ├── routes/
-│   │   └── conversationRoutes.js # Endpoint /api/conversar
-│   ├── services/
-│   │   ├── WhisperService.js     # STT con Whisper API
-│   │   ├── ChatGPTService.js     # Conversación con ChatGPT
-│   │   └── ElevenLabsService.js  # TTS con ElevenLabs
-│   └── temp/                     # Archivos temporales (auto-generado)
+│   │   └── socketHandler.js      # Manejo de WebSocket
+│   └── services/
+│       ├── WhisperService.js     # STT con OpenAI Whisper
+│       ├── ChatGPTService.js     # IA conversacional
+│       └── ElevenLabsService.js  # TTS con streaming
 ├── frontend/
-│   ├── index.html                # Interfaz minimalista
-│   ├── styles.css                # Estilos de esfera y animaciones
-│   ├── app.js                    # Lógica principal de la app
-│   └── audioVisualizer.js        # Análisis de audio en tiempo real
-├── .env                          # Variables de entorno (NO COMMITEAR)
+│   ├── index.html                # Página principal
+│   ├── app.js                    # Lógica principal + VAD
+│   ├── audioCapture.js           # Sistema VAD
+│   ├── audioVisualizer.js        # Visualización de audio
+│   ├── particleSystem.js         # Sistema de partículas
+│   └── styles.css                # Estilos
+├── .env                          # Variables de entorno (no incluido)
 ├── .gitignore
 ├── package.json
 └── README.md
 ```
 
-### Servicios Backend (Módulos SOLID)
+## 🎮 Cómo Usar
 
-| Servicio | Responsabilidad |
-|----------|----------------|
-| `WhisperService` | Transcribir audio a texto |
-| `ChatGPTService` | Generar respuestas conversacionales |
-| `ElevenLabsService` | Convertir texto a voz (premium) |
+1. **Iniciar conversación**: Click en la esfera central
+2. **Hablar**: El VAD detecta automáticamente cuando hablas
+3. **Esperar respuesta**: La IA procesa y responde con voz
+4. **Continuar**: La conversación continúa automáticamente
+5. **Detener**: Click nuevamente para finalizar
 
-### Frontend (Reactivo y Visual)
+## 🔧 Tecnologías
 
+### Frontend
+- **Vite**: Build tool y dev server
+- **GSAP**: Animaciones
+- **Socket.IO Client**: WebSocket
+- **@ricky0123/vad-web**: Voice Activity Detection
+- **SimplexNoise**: Generador de ruido para partículas
+- **Web Audio API**: Procesamiento y visualización de audio
 
-**Request:**
-```
-FormData con campo 'audio' (archivo de audio)
-```
+### Backend
+- **Node.js + Express**: Servidor HTTP
+- **Socket.IO**: WebSocket server
+- **OpenAI SDK**: Whisper + GPT-4
+- **ElevenLabs SDK**: Text-to-Speech
+- **FormData + Blob**: Manejo de audio
+- **Multer**: Procesamiento de archivos
 
-**Response:**
-```json
-{
-  "success": true,
-  "transcript": "texto transcrito por whisper",
-  "response": "respuesta de chatgpt",
-  "audio": "base64-encoded-audio",
-  "ttsProvider": "elevenlabs" | "coqui-client",
-  "processingTime": 1234
-}
-```
+## 📊 Flujo de la Aplicación
 
-### `GET /api/status`
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant VAD
+    participant Backend
+    participant Whisper
+    participant ChatGPT
+    participant ElevenLabs
 
-Verifica el estado de los servicios.
-
-**Response:**
-```json
-{
-  "whisper": "OK",
-  "chatgpt": "OK",
-  "elevenlabs": "OK",
-  "elevenLabsCredits": {
-    "available": 12345,
-    "limit": 50000,
-    "hasCredits": true
-  }
-}
-```
-
-### `POST /api/reset`
-
-Reinicia el historial de conversación.
-
-## 🎭 Personalización
-
-### Cambiar la voz de ElevenLabs
-
-1. Obtén las voces disponibles:
-```bash
-curl -X GET https://api.elevenlabs.io/v1/voices \
-  -H "xi-api-key: TU_API_KEY"
+    User->>Frontend: Click en esfera
+    Frontend->>VAD: Iniciar detección
+    VAD->>User: Micrófono activo
+    User->>VAD: Habla
+    VAD->>VAD: Detecta voz
+    VAD->>VAD: Detecta silencio >1s
+    VAD->>Backend: Envía audio (WebSocket)
+    Backend->>Whisper: Transcribir
+    Whisper-->>Backend: Texto
+    Backend->>ChatGPT: Generar respuesta
+    ChatGPT-->>Backend: Respuesta
+    Backend->>ElevenLabs: Text-to-Speech (streaming)
+    ElevenLabs-->>Backend: Audio chunks
+    Backend->>Frontend: Stream audio (WebSocket)
+    Frontend->>Frontend: Buffer + reproduce
+    Frontend->>User: Audio fluido
+    Frontend->>VAD: Vuelve a escuchar
 ```
 
-2. Actualiza `ELEVENLABS_VOICE_ID` en `.env`
+## 🎯 Características Técnicas Destacadas
 
-### Ajustar colores de la esfera
+### Voice Activity Detection (VAD)
+- Modelo Silero VAD (ONNX)
+- Detección en tiempo real (frames de 30ms)
+- Threshold configurable: 0.5
+- Silence detection: 1000ms
+- Automatic commit on silence
 
-Edita las variables CSS en `frontend/styles.css`:
+### Audio Streaming
+- **Buffering inteligente**: Combina chunks pequeños (>1000 bytes)
+- **Reproducción continua**: Un solo AudioBuffer para evitar gaps
+- **Visualización reactiva**: Partículas sincronizadas con audio
+- **Latencia reducida**: ~9 segundos hasta primer audio
 
-```css
-:root {
-  --primary-purple: #a855f7;
-  --primary-cyan: #06b6d4;
-  --primary-pink: #ec4899;
-  --glow-color: rgba(168, 85, 247, 0.6);
-}
+### WebSocket Architecture
+- **Eventos bidireccionales**:
+  - `audio-data`: Cliente → Servidor (audio capturado)
+  - `transcript`: Servidor → Cliente (texto transcrito)
+  - `response`: Servidor → Cliente (respuesta de IA)
+  - `audio-chunk`: Servidor → Cliente (chunks de TTS)
+  - `audio-end`: Servidor → Cliente (fin de streaming)
+  - `status`: Servidor → Cliente (estados del proceso)
+
+## 🐛 Debugging
+
+El proyecto incluye logging extensivo. Abre la consola del navegador (F12) para ver:
+
+```
+🎙️ [VAD] - Voice Activity Detection
+📦 [WEBSOCKET] - Eventos de WebSocket
+▶️ [PLAYBACK] - Reproducción de audio
+📤 [SEND] - Envío de datos
+🎼 - Decodificación de audio
 ```
 
-### Modificar parámetros de ChatGPT
+## 📝 Notas
 
-Edita `backend/config/appsettings.json`:
+- **Requisito de HTTPS**: Para producción, WebRTC/getUserMedia requiere HTTPS
+- **Permisos de micrófono**: El navegador solicitará permiso en el primer uso
+- **Costo de APIs**: Ten en cuenta los costos de OpenAI y ElevenLabs
+- **Browser compatibility**: Chrome/Edge recomendados (Web Audio API + WASM)
 
-```json
-{
-  "openai": {
-    "temperature": 0.7,  // Creatividad (0-2)
-    "maxTokens": 500,    // Longitud máxima
-    "systemPrompt": "Tu personalización aquí"
-  }
-}
-```
+## 🤝 Contribuir
 
-## 🐛 Troubleshooting
+Las contribuciones son bienvenidas. Por favor:
 
-### La esfera no reacciona
+1. Fork el proyecto
+2. Crea una branch (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add: Amazing Feature'`)
+4. Push a la branch (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
 
-- Verifica que has permitido el acceso al micrófono
-- Abre la consola del navegador (F12) para ver errores
-- Asegúrate de que el servidor está corriendo
+## 📜 Licencia
 
-### Error "No se pudo acceder al micrófono"
+Este proyecto está bajo la Licencia MIT.
 
-- El navegador necesita **HTTPS** o **localhost**
-- Verifica permisos del navegador
-- Intenta con Chrome/Edge (mejor soporte de Web Audio API)
+## 👤 Autor
 
-### ElevenLabs no funciona
+**André Saúl**
+- GitHub: [@AndreSaul16](https://github.com/AndreSaul16)
 
-- Verifica tu API key en `.env`
-- Revisa créditos disponibles: `GET /api/status`
-- El sistema usará CoquiTTS local como respaldo (próximamente)
+## 🙏 Agradecimientos
 
-### El audio no se reproduce
-
-- Verifica que el navegador soporta `audio/mpeg`
-- Revisa la consola para errores de CORS
-- Asegúrate de que el audio se generó correctamente
-
-## 🔮 Próximas Características (TODO)
-
-- [ ] **CoquiTTS Local con WebGPU**: TTS completamente offline
-- [ ] **Streaming End-to-End**: Respuestas en tiempo real
-- [ ] **Historial de Conversaciones**: Persistencia con LocalStorage
-- [ ] **Temas Personalizables**: Dark/Light/Custom
-- [ ] **Soporte Multiidioma**: Automático según idioma detectado
-- [ ] **Análisis de Sentimiento**: Cambio de colores según emoción
-
-## 📝 Licencia
-
-MIT License - Siéntete libre de usar y modificar.
-
-## 🙏 Créditos
-
-- **OpenAI**: Whisper y ChatGPT
-- **ElevenLabs**: Text-to-Speech premium
-- **GSAP**: Animaciones fluidas
-- **Tailwind CSS**: Estilos utility-first
+- OpenAI por Whisper y GPT-4
+- ElevenLabs por su API de TTS
+- @ricky0123 por la librería VAD
+- GreenSock (GSAP) por las animaciones
 
 ---
 
-**Desarrollado con ❤️ para crear experiencias conversacionales inmersivas**
-
-🌟 Si te gusta este proyecto, ¡dale una estrella en GitHub!
+⭐ Si este proyecto te ha sido útil, considera darle una estrella en GitHub!
