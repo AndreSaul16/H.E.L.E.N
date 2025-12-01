@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceAI - VAD + WebSocket Demo</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 1. Cargamos el motor ONNX (Cerebro local) - Versión 1.14.0 ESTRICTA -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/ort.js"></script>
+
+    <!-- 2. Cargamos la librería VAD (Detector de voz) -->
+    <script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.7/dist/bundle.min.js"></script>
+
+    <style>
+        /* Animación de pulso para cuando está escuchando */
+        @keyframes listening-pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: 1;
+            }
+        }
+
+        .listening-pulse {
+            animation: listening-pulse 1.5s infinite;
+        }
+
+        /* Animación para cuando está hablando */
+        @keyframes speaking-animation {
+
+            0%,
+            100% {
+                transform: scale(1) rotate(0deg);
+            }
+
+            25% {
+                transform: scale(1.05) rotate(2deg);
+            }
+
+            75% {
+                transform: scale(0.95) rotate(-2deg);
+            }
+        }
+
+        .speaking-animation {
+            animation: speaking-animation 0.8s infinite;
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 min-h-screen text-white">
+
+    <div class="container mx-auto px-4 py-8">
+
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1
+                class="text-5xl font-bold bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent mb-4">
+                🎙️ VoiceAI Full-Duplex Demo
+            </h1>
+            <p class="text-gray-300 text-lg">
+                Conversación natural con VAD (Voice Activity Detection) + WebSocket Streaming
+            </p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="max-w-4xl mx-auto">
+
+            <!-- Estado de Conexión -->
+            <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 mb-8 border border-white/20">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold mb-2">Estado del Sistema</h3>
+                        <p id="statusText" class="text-gray-300">
+                            Esperando conexión...
+                        </p>
+                    </div>
+                    <div id="connectionIndicator" class="w-4 h-4 rounded-full bg-yellow-500 animate-pulse"></div>
+                </div>
+            </div>
+
+            <!-- Esfera Central (Indicador Visual) -->
+            <div class="flex justify-center mb-8">
+                <div id="sphere"
+                    class="w-64 h-64 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 shadow-2xl flex items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-white/20 rounded-full animate-pulse"></div>
+                    <div class="relative z-10">
+                        <svg class="w-32 h-32 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z">
+                            </path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón de Control -->
+            <div class="text-center mb-8">
+                <button id="startButton"
+                    class="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-full text-xl font-bold shadow-lg transform hover:scale-105 transition-all duration-200">
+                    Iniciar VAD 🎤
+                </button>
+            </div>
+
+            <!-- Área de Conversación -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+                <!-- Transcripción -->
+                <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                    <h3 class="text-lg font-semibold mb-3 flex items-center">
+                        <span class="mr-2">📝</span> Tu mensaje
+                    </h3>
+                    <p id="transcriptText" class="text-gray-300 min-h-[60px]">
+                        Esperando tu voz...
+                    </p>
+                </div>
+
+                <!-- Respuesta -->
+                <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
+                    <h3 class="text-lg font-semibold mb-3 flex items-center">
+                        <span class="mr-2">🤖</span> Respuesta AI
+                    </h3>
+                    <p id="responseText" class="text-gray-300 min-h-[60px]">
+                        Esperando respuesta...
+                    </p>
+                </div>
+
+            </div>
+
+            <!-- Mensaje de Error -->
+            <div id="errorMessage"
+                class="fixed top-24 left-1/2 transform -translate-x-1/2 max-w-md w-full px-8 opacity-0 transition-opacity duration-300 pointer-events-none z-50">
+                <div class="bg-red-500/90 backdrop-blur-xl border border-red-400 rounded-xl p-4 shadow-2xl">
+                    <p class="text-white text-center font-semibold"></p>
+                </div>
+            </div>
+
+            <!-- Información Pedagógica -->
+            <div class="bg-blue-500/10 backdrop-blur-md rounded-xl p-6 border border-blue-500/30 mt-8">
+                <h3 class="text-xl font-bold mb-4 flex items-center">
+                    <span class="mr-2">📚</span> ¿Cómo funciona?
+                </h3>
+                <div class="space-y-3 text-gray-300">
+                    <div class="flex items-start">
+                        <span class="mr-3 text-2xl">🎙️</span>
+                        <div>
+                            <strong>VAD (Voice Activity Detection):</strong> Detecta automáticamente cuándo hablas y
+                            cuándo te callas.
+                            No necesitas hacer click para empezar o parar.
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="mr-3 text-2xl">🔌</span>
+                        <div>
+                            <strong>WebSocket:</strong> Conexión permanente que permite comunicación bidireccional en
+                            tiempo real
+                            (como una llamada telefónica vs enviar cartas).
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="mr-3 text-2xl">⚡</span>
+                        <div>
+                            <strong>Streaming:</strong> El audio llega en pedazos pequeños, puedes empezar a escuchar
+                            antes de que
+                            termine de generarse todo (como Netflix vs descargar película completa).
+                        </div>
+                    </div>
+                    <div class="flex items-start">
+                        <span class="mr-3 text-2xl">📦</span>
+                        <div>
+                            <strong>Buffer:</strong> Acumulador temporal que guarda tu voz hasta que detecta un silencio
+                            semántico
+                            (pausa larga = "terminaste de hablar").
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Métricas (opcional) -->
+            <div class="bg-white/5 backdrop-blur-md rounded-xl p-6 border border-white/10 mt-6">
+                <h3 class="text-lg font-semibold mb-3">Métricas de Rendimiento</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div>
+                        <p class="text-2xl font-bold text-purple-400" id="metric-latency">--</p>
+                        <p class="text-xs text-gray-400">Latencia Total (ms)</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-pink-400" id="metric-ttfc">--</p>
+                        <p class="text-xs text-gray-400">Time to First Chunk (ms)</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-blue-400" id="metric-chunks">--</p>
+                        <p class="text-xs text-gray-400">Chunks de Audio</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-green-400" id="metric-status">IDLE</p>
+                        <p class="text-xs text-gray-400">Estado</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="app_vad_websocket.js"></script>
+
+</body>
+
+</html>

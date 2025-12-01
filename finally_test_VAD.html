@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceAI Minimalista</title>
+
+    <!-- 1. Cargamos el motor ONNX (Cerebro local) - Versión 1.14.0 ESTRICTA -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/ort.js"></script>
+
+    <!-- 2. Cargamos la librería VAD (Detector de voz) -->
+    <script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.7/dist/bundle.min.js"></script>
+
+    <!-- 3. Axios para peticiones HTTP fáciles -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: #2d2d2d;
+            padding: 2rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            background: #333;
+            color: #fff;
+        }
+
+        .status-dot {
+            height: 20px;
+            width: 20px;
+            background-color: #555;
+            border-radius: 50%;
+            display: inline-block;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+        }
+
+        .status-dot.listening {
+            background-color: #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+            transform: scale(1.2);
+        }
+
+        .status-dot.processing {
+            background-color: #ffff00;
+            animation: pulse 1s infinite;
+        }
+
+        #log {
+            margin-top: 20px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.9rem;
+            color: #aaa;
+            border-top: 1px solid #444;
+            padding-top: 10px;
+        }
+
+        .transcript-item {
+            margin-bottom: 10px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 5px;
+        }
+
+        .transcript-item span {
+            color: #a855f7;
+            font-weight: bold;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>🎙️ VAD + Whisper (Sin Servidor)</h2>
+
+        <!-- API Key Input -->
+        <div style="margin-bottom: 20px; font-size: 0.8rem; color: #888;">
+            Ingresa tu OpenAI API Key (se usa solo localmente):
+        </div>
+        <input type="password" id="apiKey" placeholder="sk-..." />
+
+        <!-- Indicador Visual -->
+        <div id="indicator" class="status-dot"></div>
+        <div id="statusText">Esperando inicio...</div>
+
+        <button id="btnStart"
+            style="margin-top: 20px; padding: 10px 30px; background: #a855f7; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+            Iniciar Micrófono
+        </button>
+
+        <!-- Logs -->
+        <div id="log"></div>
+    </div>
+
+    <script>
+        // Variables globales
+        let myvad;
+        const indicator = document.getElementById('indicator');
+        const statusText = document.getElementById('statusText');
+        const logDiv = document.getElementById('log');
+        const btnStart = document.getElementById('btnStart');
+        const apiKeyInput = document.getElementById('apiKey');
+
+        // Función principal de inicio
+        async function startApp() {
+            const apiKey = apiKeyInput.value.trim();
+            if (!apiKey.startsWith('sk-')) {
+                alert('Por favor ingresa una API Key válida de OpenAI');
+                return;
+            }
+
+            btnStart.disabled = true;
+            btnStart.textContent = "Cargando modelos...";
+            statusText.textContent = "Descargando VAD...";
+
+            try {
+                // INICIALIZACIÓN DEL VAD (Usando versión CDN global window.vad)
+                myvad = await window.vad.MicVAD.new({
+
+                    // Configuración crítica para CDN (Evita errores de carga local)
+                    workletURL: "https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.7/dist/vad.worklet.bundle.min.js",
+                    modelURL: "https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.7/dist/silero_vad.onnx",
+                    onnxWASMPaths: "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/",
+
+                    // Ajustes de sensibilidad
+                    positiveSpeechThreshold: 0.5,
+                    minSpeechFrames: 10,
+
+                    // CALLBACK 1: Empiezas a hablar
+                    onSpeechStart: () => {
+                        console.log("🗣️ Detectando voz...");
+                        indicator.className = "status-dot listening";
+                        statusText.textContent = "Escuchando...";
+                    },
+
+                    // CALLBACK 2: Dejas de hablar (Silencio detectado)
+                    onSpeechEnd: (audio) => {
+                        console.log("🤫 Silencio detectado. Procesando...");
+                        indicator.className = "status-dot processing";
+                        statusText.textContent = "Enviando a Whisper...";
+
+                        // Aquí ocurre la magia: Enviamos el audio a OpenAI
+                        transcribeAudio(audio, apiKey);
+                    },
+
+                    onVADMisfire: () => {
+                        console.log("⚠️ Falsa alarma");
+                        indicator.className = "status-dot";
+                        statusText.textContent = "Esperando voz...";
+                    }
+                });
+
+                // Arrancar el VAD
+                myvad.start();
+                statusText.textContent = "Sistema listo. ¡Habla!";
+                btnStart.style.display = 'none';
+
+            } catch (e) {
+                console.error("Error al iniciar:", e);
+                statusText.textContent = "Error: " + e.message;
+                btnStart.disabled = false;
+            }
+        }
+
+        // Función para enviar a OpenAI Whisper
+        async function transcribeAudio(float32Array, apiKey) {
+            try {
+                // 1. Convertir el audio crudo (Float32) a archivo WAV (Blob)
+                const wavBlob = float32ToWav(float32Array, 16000);
+
+                // 2. Preparar el formulario para la API
+                const formData = new FormData();
+                formData.append("file", wavBlob, "audio.wav");
+                formData.append("model", "whisper-1");
+                formData.append("language", "es"); // Forzar español
+
+                // 3. Petición HTTP a OpenAI
+                const response = await axios.post('https://api.openai.com/v1/audio/transcriptions', formData, {
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'multipart/form-data'
+                    }
+                });
+
+                // 4. Mostrar resultado
+                const text = response.data.text;
+                addLog(text);
+
+                indicator.className = "status-dot";
+                statusText.textContent = "Esperando voz...";
+
+            } catch (error) {
+                console.error("Error Whisper:", error);
+                statusText.textContent = "Error en transcripción";
+                indicator.className = "status-dot";
+            }
+        }
+
+        // --- Utilidades ---
+
+        function addLog(text) {
+            const div = document.createElement('div');
+            div.className = 'transcript-item';
+            div.innerHTML = `<span>Tú:</span> ${text}`;
+            logDiv.prepend(div);
+        }
+
+        // Convertidor de Audio Crudo a WAV (Magia técnica necesaria)
+        function float32ToWav(float32Array, sampleRate) {
+            const buffer = new ArrayBuffer(44 + float32Array.length * 2);
+            const view = new DataView(buffer);
+
+            // Headers WAV estándar
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + float32Array.length * 2, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, 1, true);
+            view.setUint16(22, 1, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true);
+            view.setUint16(32, 2, true);
+            view.setUint16(34, 16, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, float32Array.length * 2, true);
+
+            // Escribir datos PCM
+            for (let i = 0; i < float32Array.length; i++) {
+                let s = Math.max(-1, Math.min(1, float32Array[i]));
+                s = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                view.setInt16(44 + i * 2, s, true);
+            }
+
+            return new Blob([view], { type: 'audio/wav' });
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        // Event Listeners
+        btnStart.addEventListener('click', startApp);
+
+    </script>
+
+</body>
+
+</html>

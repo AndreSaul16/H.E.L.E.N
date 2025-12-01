@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceAI - Singularidad Conversacional</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- 1. Cargamos el motor ONNX (Cerebro local) - Versión 1.14.0 ESTRICTA -->
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.14.0/dist/ort.js"></script>
+
+    <!-- 2. Cargamos la librería VAD (Detector de voz) -->
+    <script src="https://cdn.jsdelivr.net/npm/@ricky0123/vad-web@0.0.7/dist/bundle.min.js"></script>
+
+    <!-- 3. Socket.IO Client (CDN) -->
+    <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+    <!-- Simplex Noise -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/simplex-noise/2.4.0/simplex-noise.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="bg-black h-screen w-screen overflow-hidden select-none text-white">
+
+    <!-- Canvas de Partículas (Fondo) -->
+    <canvas id="particlesCanvas" class="fixed inset-0 w-full h-full z-0"></canvas>
+
+    <!-- Contenedor Principal -->
+    <div class="relative z-10 w-full h-full flex flex-col items-center justify-center">
+
+        <!-- Esfera Interactiva -->
+        <div id="sphereContainer"
+            class="relative w-64 h-64 cursor-pointer transition-transform duration-300 hover:scale-105 active:scale-95">
+            <div id="sphere" class="absolute inset-0 flex items-center justify-center">
+                <div class="absolute inset-0 rounded-full bg-white/10 backdrop-blur-sm border border-white/20"></div>
+                <div class="sphere-glow absolute inset-[-20%] rounded-full bg-purple-500/30 blur-xl animate-pulse">
+                </div>
+            </div>
+        </div>
+
+        <!-- Indicador de estado -->
+        <div id="statusIndicator" class="absolute top-12 left-1/2 transform -translate-x-1/2 pointer-events-none">
+            <div class="text-center">
+                <p id="statusText" class="text-white/80 text-sm font-light tracking-wider uppercase">
+                    Click en la esfera para comenzar
+                </p>
+                <div id="statusBar"
+                    class="mt-2 h-px w-32 mx-auto bg-gradient-to-r from-transparent via-purple-500 to-transparent opacity-0">
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de transcripción (OCULTA - solo consola) -->
+        <div id="transcriptArea" style="display: none;">
+            <p id="transcriptText"></p>
+        </div>
+
+        <!-- Área de respuesta (OCULTA - solo consola) -->
+        <div id="responseArea" style="display: none;">
+            <p id="responseText"></p>
+        </div>
+
+        <!-- Mensaje de error -->
+        <div id="errorMessage"
+            class="absolute top-24 left-1/2 transform -translate-x-1/2 max-w-md w-full px-8 opacity-0 transition-opacity duration-300 pointer-events-none">
+            <div class="bg-red-500/20 border border-red-500/50 backdrop-blur-xl p-4 rounded-xl">
+                <p class="text-red-300 text-sm text-center"></p>
+            </div>
+        </div>
+
+        <!-- Visualizador de audio (Oculto/Auxiliar) -->
+        <canvas id="audioVisualizer" class="absolute inset-0 w-full h-full pointer-events-none opacity-0"></canvas>
+
+    </div>
+
+    <!-- Scripts -->
+    <script type="module" src="app.js"></script>
+</body>
+
+</html>
