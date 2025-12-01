@@ -97,10 +97,16 @@ class VoiceAIApp {
         console.log('🔌 [WEBSOCKET] Conectando a WebSocket...');
         console.log('🔌 [WEBSOCKET] window.io disponible:', typeof window.io !== 'undefined');
 
-        this.socket = window.io({
+        // Use environment variable for backend URL, fallback to window.location.origin
+        const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || window.location.origin;
+        console.log('🔌 [WEBSOCKET] Backend URL:', BACKEND_URL);
+
+        this.socket = window.io(BACKEND_URL, {
             reconnection: true,
             reconnectionAttempts: 5,
-            reconnectionDelay: 1000
+            reconnectionDelay: 1000,
+            transports: ['websocket', 'polling'],
+            secure: true
         });
 
         this.socket.on('connect', () => {

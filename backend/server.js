@@ -39,18 +39,31 @@ const PORT = process.env.PORT || 3000;
  */
 const httpServer = createServer(app);
 
-// Middlewares
+// Middlewares - CORS configuration for development and production
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://127.0.0.1:5173',
+    `http://localhost:${PORT}`,
+    `http://127.0.0.1:${PORT}`
+];
+
+// Add production frontend URL if available
+if (process.env.FRONTEND_URL) {
+    allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://127.0.0.1:5173', `http://localhost:${PORT}`, `http://127.0.0.1:${PORT}`],
-    credentials: true
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST']
 }));
 
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Servir archivos estáticos del frontend
-app.use(express.static(path.join(__dirname, '..', 'frontend')));
+// Servir archivos estáticos del frontend (Build de producción)
+app.use(express.static(path.join(__dirname, '..', 'frontend', 'dist')));
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -80,9 +93,23 @@ const io = setupWebSocket(httpServer, services);
 // Rutas de API (mantener compatibilidad con HTTP)
 app.use('/api', conversationRoutes);
 
-// Ruta principal
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'index.html'));
+// Health check endpoint for monitoring services
+app.get('/health', (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
+// Ruta principal (SPA fallback)
+app.get('*', (req, res) => {
+    // Ignorar peticiones a /api que no coincidieron
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({ error: 'Endpoint API no encontrado' });
+    }
+    res.sendFile(path.join(__dirname, '..', 'frontend', 'dist', 'index.html'));
 });
 
 // Ruta 404

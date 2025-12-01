@@ -9,7 +9,7 @@
     "start": "node backend/server.js",
     "dev:vite": "vite",
     "dev:full": "concurrently \"npm run dev\" \"npm run dev:vite\"",
-    "build": "vite build"
+    "build": "npm install && vite build --outDir frontend/dist"
   },
   "keywords": [
     "voice",
